@@ -1,7 +1,6 @@
-
 import React from "react";
-import { Button } from "@/components/ui/button";
 import { Undo2, Redo2, Play, Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface WorkflowToolbarProps {
   onUndo: () => void;
@@ -31,7 +30,7 @@ const WorkflowToolbar: React.FC<WorkflowToolbarProps> = ({
       >
         <Undo2 className="h-4 w-4" />
       </Button>
-      
+
       <Button
         variant="outline"
         size="icon"
@@ -41,9 +40,9 @@ const WorkflowToolbar: React.FC<WorkflowToolbarProps> = ({
       >
         <Redo2 className="h-4 w-4" />
       </Button>
-      
+
       <div className="border-l h-6 mx-2" />
-      
+
       <Button
         variant="outline"
         size="sm"

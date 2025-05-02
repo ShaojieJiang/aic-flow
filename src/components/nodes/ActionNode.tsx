@@ -1,10 +1,9 @@
-
 import React from "react";
 import { NodeProps } from "@xyflow/react";
 import BaseNode from "./BaseNode";
 import { BaseNodeData } from "./BaseNode";
 
-// Make ActionNodeData extend BaseNodeData 
+// Make ActionNodeData extend BaseNodeData
 export interface ActionNodeData extends BaseNodeData {
   actionType: string;
 }

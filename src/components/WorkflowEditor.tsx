@@ -1,15 +1,13 @@
 import React, { useState, useCallback, useRef } from "react";
-import { toast } from "@/components/ui/use-toast";
-import { 
-  ReactFlow, 
-  Background, 
-  Controls, 
+import {
+  ReactFlow,
+  Background,
+  Controls,
   MiniMap,
   useNodesState,
   useEdgesState,
   addEdge,
   Connection,
-  Edge,
   Node,
   NodeTypes,
   useReactFlow,
@@ -20,14 +18,14 @@ import "@xyflow/react/dist/style.css";
 import BaseNode, { BaseNodeData } from "./nodes/BaseNode";
 import ActionNode, { ActionNodeData } from "./nodes/ActionNode";
 import NodeConfigForm from "./NodeConfigForm";
-import { getInitialNodes, getInitialEdges } from "@/utils/workflowUtils";
 import NodeLibrary from "./NodeLibrary";
 import WorkflowToolbar from "./WorkflowToolbar";
+import { getInitialNodes, getInitialEdges } from "@/utils/workflowUtils";
 import { useUndoRedo } from "@/hooks/useUndoRedo";
 import { executeWorkflow } from "@/utils/workflowExecutionEngine";
+import { toast } from "@/components/ui/use-toast";
 
 // Import from Lovable's utility library
-import { cn } from "@/lib/utils";
 
 // Define a union type for all possible node data types
 export type NodeData = BaseNodeData | ActionNodeData;
@@ -46,27 +44,21 @@ const WorkflowEditorContent: React.FC = () => {
   const [configFormOpen, setConfigFormOpen] = useState(false);
   const [isExecuting, setIsExecuting] = useState(false);
   const reactFlowInstance = useReactFlow();
-  
+
   // Set up undo/redo functionality
-  const {
-    undo,
-    redo,
-    takeSnapshot,
-    canUndo,
-    canRedo,
-  } = useUndoRedo({
+  const { undo, redo, takeSnapshot, canUndo, canRedo } = useUndoRedo({
     nodes,
     edges,
     onRestore: (state) => {
       setNodes(state.nodes || []);
       setEdges(state.edges || []);
-    }
+    },
   });
-  
+
   // Take a snapshot whenever nodes or edges change
   const prevNodesRef = useRef(nodes);
   const prevEdgesRef = useRef(edges);
-  
+
   React.useEffect(() => {
     // Only take a snapshot if something actually changed
     if (
@@ -83,17 +75,20 @@ const WorkflowEditorContent: React.FC = () => {
     (params: Connection) => {
       setEdges((eds) => addEdge(params, eds));
     },
-    [setEdges]
+    [setEdges],
   );
 
   const onNodeClick = useCallback((event: React.MouseEvent, node: Node) => {
     console.log("Node clicked:", node);
   }, []);
 
-  const onNodeDoubleClick = useCallback((event: React.MouseEvent, node: Node) => {
-    // Now handled inside the BaseNode component via the dialog
-    // We don't need to do anything here anymore
-  }, []);
+  const onNodeDoubleClick = useCallback(
+    (event: React.MouseEvent, node: Node) => {
+      // Now handled inside the BaseNode component via the dialog
+      // We don't need to do anything here anymore
+    },
+    [],
+  );
 
   const handleConfigSave = (nodeId: string, config: Record<string, any>) => {
     setNodes((nds) => {
@@ -115,16 +110,16 @@ const WorkflowEditorContent: React.FC = () => {
         return node;
       });
     });
-    
+
     toast({
       title: "Configuration Saved",
       description: `Updated configuration for node ${nodeId}`,
     });
   };
-  
+
   const handleRunAll = async () => {
     if (isExecuting) return;
-    
+
     setIsExecuting(true);
     try {
       const results = await executeWorkflow(nodes, edges);
@@ -140,7 +135,7 @@ const WorkflowEditorContent: React.FC = () => {
       setIsExecuting(false);
     }
   };
-  
+
   const handleAddNode = (nodeType: string, nodeData: NodeData) => {
     // Get position in the middle of the viewport
     const { x, y } = reactFlowInstance.getViewport();
@@ -148,7 +143,7 @@ const WorkflowEditorContent: React.FC = () => {
       x: x + Math.random() * 300 + 100,
       y: y + Math.random() * 300 + 100,
     };
-    
+
     const newNode: Node = {
       id: nodeData.id,
       type: nodeType,
@@ -158,9 +153,9 @@ const WorkflowEditorContent: React.FC = () => {
         onConfigUpdate: handleConfigSave,
       },
     };
-    
+
     setNodes((nds) => [...nds, newNode]);
-    
+
     toast({
       title: "Node Added",
       description: `Added new ${nodeData.label} node`,
@@ -169,7 +164,7 @@ const WorkflowEditorContent: React.FC = () => {
 
   return (
     <div className="h-full w-full flex flex-col">
-      <WorkflowToolbar 
+      <WorkflowToolbar
         onUndo={undo}
         onRedo={redo}
         onRunWorkflow={handleRunAll}
@@ -177,10 +172,10 @@ const WorkflowEditorContent: React.FC = () => {
         canRedo={canRedo}
         isExecuting={isExecuting}
       />
-      
+
       <div className="flex-1 flex">
         <NodeLibrary onAddNode={handleAddNode} />
-        
+
         <div className="flex-1">
           <ReactFlow
             nodes={nodes}
@@ -199,9 +194,9 @@ const WorkflowEditorContent: React.FC = () => {
           </ReactFlow>
         </div>
       </div>
-      
+
       {/* We keep this for compatibility, but it's no longer used for configuration */}
-      <NodeConfigForm 
+      <NodeConfigForm
         isOpen={configFormOpen}
         onClose={() => setConfigFormOpen(false)}
         node={selectedNode}

@@ -1,7 +1,4 @@
-
 import { Node, Edge } from "@xyflow/react";
-import { BaseNodeData } from "@/components/nodes/BaseNode";
-import { ActionNodeData } from "@/components/nodes/ActionNode";
 import { NodeData } from "@/components/WorkflowEditor";
 
 // Node type definitions
@@ -21,24 +18,28 @@ export const getInitialNodes = (): Node[] => [
       label: "HTTP Request",
       actionType: "http",
       inputs: {
-        url: { type: "string" }
+        url: { type: "string" },
       },
       outputs: {
         response: { type: "object" },
-        status: { type: "number" }
+        status: { type: "number" },
       },
       config: {
         url: "https://api.example.com/data",
         method: "GET",
       },
-      onRun: async (nodeId: string, inputs: Record<string, any>, config: Record<string, any>) => {
+      onRun: async (
+        nodeId: string,
+        inputs: Record<string, any>,
+        config: Record<string, any>,
+      ) => {
         console.log(`Running HTTP Request node ${nodeId}`);
         // Simulate HTTP request
-        const outputs = { 
-          response: { 
-            data: { message: "Success!" }, 
-            status: 200 
-          } 
+        const outputs = {
+          response: {
+            data: { message: "Success!" },
+            status: 200,
+          },
         };
         return outputs;
       },
@@ -53,20 +54,26 @@ export const getInitialNodes = (): Node[] => [
       label: "Process Data",
       actionType: "function",
       inputs: {
-        data: { type: "object" }
+        data: { type: "object" },
       },
       outputs: {
-        result: { type: "string" }
+        result: { type: "string" },
       },
       config: {
         function: "return inputs.data.message.toUpperCase();",
       },
-      onRun: async (nodeId: string, inputs: Record<string, any>, config: Record<string, any>) => {
+      onRun: async (
+        nodeId: string,
+        inputs: Record<string, any>,
+        config: Record<string, any>,
+      ) => {
         console.log(`Running Process Data node ${nodeId}`);
         // Simulate data processing
         try {
           // This would be replaced with proper function execution
-          const result = inputs.data?.message ? inputs.data.message.toUpperCase() : "NO INPUT";
+          const result = inputs.data?.message
+            ? inputs.data.message.toUpperCase()
+            : "NO INPUT";
           return { result };
         } catch (error) {
           console.error("Error processing data:", error);
@@ -92,7 +99,7 @@ export const getInitialEdges = (): Edge[] => [
 export const updateNodeConfig = (
   nodes: Node[],
   nodeId: string,
-  config: Record<string, any>
+  config: Record<string, any>,
 ): Node[] => {
   return nodes.map((node) => {
     if (node.id === nodeId) {
