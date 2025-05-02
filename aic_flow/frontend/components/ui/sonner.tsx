@@ -1,5 +1,5 @@
-import { useTheme } from "next-themes";
 import { Toaster as Sonner } from "sonner";
+import { useTheme } from "@/hooks/useTheme";
 
 type ToasterProps = React.ComponentProps<typeof Sonner>;
 

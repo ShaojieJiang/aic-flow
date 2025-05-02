@@ -1,7 +1,7 @@
 # Product Requirements Document
 
 **Product** : **AIC Flow – Visual Workflow Automation Platform**
-**Version** : 0.2 (revision of v0.1)
+**Version** : 0.1
 **Author** : Shaojie Jiang & ChatGPT
 **Date** : 2 May 2025
 **Reviewers** : Core Engineering & Design teams

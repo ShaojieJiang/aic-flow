@@ -1,3 +1,17 @@
+lint:
+	ruff check .
+	mypy aic_flow
+	ruff format . --check
+	npx eslint --fix "aic_flow/frontend/**/*.{js,jsx,ts,tsx}" --rule "import/order: error" --rule "unused-imports/no-unused-imports: error"
+
 format:
-	npx prettier --write "src/**/*.{js,jsx,ts,tsx,css,json}"
-	npx eslint --fix "src/**/*.{js,jsx,ts,tsx}" --rule "import/order: error" --rule "unused-imports/no-unused-imports: error"
+	ruff format .
+	ruff check . --select I001 --fix
+	ruff check . --select F401 --fix
+	npx prettier --write "aic_flow/frontend/**/*.{js,jsx,ts,tsx,css,json}"
+
+test:
+	pytest --cov --cov-report term-missing tests/
+
+doc:
+	mkdocs serve --dev-addr=0.0.0.0:8080

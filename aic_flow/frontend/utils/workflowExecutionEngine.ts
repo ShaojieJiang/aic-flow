@@ -1,4 +1,5 @@
 import { Node, Edge } from "@xyflow/react";
+import { executeLangGraphWorkflow } from "./langGraphExecutor";
 import { toast } from "@/components/ui/use-toast";
 import { NodeData } from "@/components/WorkflowEditor";
 
@@ -91,6 +92,26 @@ const getNodeInputs = (
  * Execute the workflow
  */
 export const executeWorkflow = async (
+  nodes: Node[],
+  edges: Edge[],
+): Promise<Map<string, any>> => {
+  // Use LangGraph execution as the primary execution method
+  try {
+    return await executeLangGraphWorkflow(nodes, edges);
+  } catch (error) {
+    console.warn(
+      "LangGraph execution failed, falling back to legacy execution",
+      error,
+    );
+    // Fall back to the original execution method
+    return executeWorkflowLegacy(nodes, edges);
+  }
+};
+
+/**
+ * Legacy workflow execution method
+ */
+const executeWorkflowLegacy = async (
   nodes: Node[],
   edges: Edge[],
 ): Promise<Map<string, any>> => {
