@@ -16,6 +16,7 @@ import {
   CONTROL_FLOW_NODE_TYPES,
   INTEGRATION_NODE_TYPES,
   CUSTOM_NODE_TYPES,
+  SPECIAL_NODE_TYPES,
   NodeCategory,
 } from "@/nodes/types";
 import { createNodeFromDefinition } from "@/utils/nodeFactory";
@@ -42,6 +43,12 @@ const NodeLibrary: React.FC<NodeLibraryProps> = ({ onAddNode }) => {
   const [isOpen, setIsOpen] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [categories, setCategories] = useState<NodeCategorySection[]>([
+    {
+      category: NodeCategory.SPECIAL,
+      title: "Special Nodes",
+      nodes: SPECIAL_NODE_TYPES,
+      expanded: true,
+    },
     {
       category: NodeCategory.SOURCE,
       title: "Data Sources",

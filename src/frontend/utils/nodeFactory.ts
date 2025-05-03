@@ -1,44 +1,44 @@
 import { Node } from "@xyflow/react";
-import { NodeTypeDefinition } from "@/nodes/types";
+import { v4 as uuidv4 } from "uuid";
+import { NodeDefinition } from "@/nodes/types";
 
-// Utility to create a node from a type definition
-export function createNodeFromDefinition(
-  typeDefinition: NodeTypeDefinition,
+/**
+ * Creates a new node instance from a node definition
+ *
+ * @param nodeDefinition Node type definition
+ * @param position Initial position on the canvas
+ * @param id Optional custom ID (defaults to generated UUID)
+ * @returns A new node instance
+ */
+export const createNodeFromDefinition = (
+  nodeDefinition: NodeDefinition,
   position: { x: number; y: number },
   id?: string,
-): Node {
-  const nodeId = id || `${typeDefinition.id}-${Date.now()}`;
+): Node => {
+  // Use literal IDs for START and END nodes
+  const nodeId =
+    nodeDefinition.label === "START"
+      ? "START"
+      : nodeDefinition.label === "END"
+        ? "END"
+        : id || `${nodeDefinition.id}-${uuidv4().substring(0, 8)}`;
 
   return {
     id: nodeId,
-    type: typeDefinition.type,
+    type: nodeDefinition.type,
     position,
     data: {
       id: nodeId,
-      label: typeDefinition.label,
-      description: typeDefinition.description,
-      category: typeDefinition.category,
-      icon: typeDefinition.icon, // Include icon in node data
-      actionType: typeDefinition.id,
-      inputs: typeDefinition.inputs,
-      outputs: typeDefinition.outputs,
-      config: { ...typeDefinition.defaultConfig },
-      executionHistory: [],
-      onRun: async (
-        nodeId: string,
-        inputs: Record<string, any>,
-        config: Record<string, any>,
-      ) => {
-        console.log(`Running ${typeDefinition.label} node ${nodeId}`);
-
-        // Use the executor if provided, otherwise simulate a default response
-        if (typeDefinition.executor) {
-          return await typeDefinition.executor(inputs, config);
-        }
-
-        return { result: `Default output from ${typeDefinition.label}` };
-      },
+      label: nodeDefinition.label,
+      description: nodeDefinition.description,
+      category: nodeDefinition.category,
+      icon: nodeDefinition.icon,
+      emoji: nodeDefinition.emoji,
+      inputs: nodeDefinition.inputs,
+      outputs: nodeDefinition.outputs,
+      actionType: nodeDefinition.id,
+      config: {}, // Initialize empty config
+      onConfigUpdate: () => {}, // Will be overridden when added to canvas
     },
-    className: `${typeDefinition.category}-node`,
   };
-}
+};

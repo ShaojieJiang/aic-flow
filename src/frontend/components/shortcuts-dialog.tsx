@@ -95,16 +95,10 @@ export function ShortcutsDialog() {
                 <span className="shortcut-key">V</span>
               </div>
             </div>
-            <div className="shortcut-row">
-              <span>Edit node</span>
-              <div className="shortcut-keys">
-                <span className="shortcut-key">Double-click</span>
-              </div>
-            </div>
           </div>
 
           <div className="shortcuts-section">
-            <h3>Workflow Management</h3>
+            <h3>Workflow Actions</h3>
             <div className="shortcut-row">
               <span>Undo</span>
               <div className="shortcut-keys">
@@ -139,6 +133,34 @@ export function ShortcutsDialog() {
             </div>
           </div>
         </div>
+
+        <style jsx>{`
+          .shortcuts-section {
+            margin-bottom: 1.5rem;
+          }
+          .shortcuts-section h3 {
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            font-size: 1rem;
+          }
+          .shortcut-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            font-size: 0.875rem;
+          }
+          .shortcut-keys {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+          }
+          .shortcut-key {
+            background-color: hsl(var(--muted));
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            font-family: monospace;
+          }
+        `}</style>
       </DialogContent>
     </Dialog>
   );

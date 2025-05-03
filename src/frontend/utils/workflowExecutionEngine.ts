@@ -1,174 +1,140 @@
 import { Node, Edge } from "@xyflow/react";
-import { executeLangGraphWorkflow } from "./langGraphExecutor";
-import { toast } from "@/components/ui/use-toast";
-import { NodeData } from "@/components/WorkflowEditor";
+import { toast } from "sonner";
 
 /**
- * Topological sort to determine execution order
+ * Executes a workflow by connecting to the backend service
+ *
+ * @param nodes Array of workflow nodes
+ * @param edges Array of workflow edges
+ * @returns Promise resolving to the workflow execution result
  */
-const getExecutionOrder = (nodes: Node[], edges: Edge[]): Node[] => {
-  const nodeMap = new Map<string, Node>();
-  const inDegree = new Map<string, number>();
-  const queue: Node[] = [];
-  const result: Node[] = [];
-
-  // Initialize data structures
-  nodes.forEach((node) => {
-    nodeMap.set(node.id, node);
-    inDegree.set(node.id, 0);
-  });
-
-  // Calculate in-degrees
-  edges.forEach((edge) => {
-    const targetId = edge.target;
-    inDegree.set(targetId, (inDegree.get(targetId) || 0) + 1);
-  });
-
-  // Find nodes with no incoming edges
-  nodes.forEach((node) => {
-    if ((inDegree.get(node.id) || 0) === 0) {
-      queue.push(node);
-    }
-  });
-
-  // Process nodes in topological order
-  while (queue.length > 0) {
-    const currentNode = queue.shift()!;
-    result.push(currentNode);
-
-    // Find outgoing edges and decrement in-degree of targets
-    edges.forEach((edge) => {
-      if (edge.source === currentNode.id) {
-        const targetId = edge.target;
-        const newInDegree = (inDegree.get(targetId) || 0) - 1;
-        inDegree.set(targetId, newInDegree);
-
-        if (newInDegree === 0) {
-          const targetNode = nodeMap.get(targetId);
-          if (targetNode) {
-            queue.push(targetNode);
-          }
-        }
-      }
-    });
-  }
-
-  // Check for cycles
-  if (result.length !== nodes.length) {
-    console.warn("Workflow contains cycles and cannot be fully executed");
-  }
-
-  return result;
-};
-
-/**
- * Get node input values from connected nodes
- */
-const getNodeInputs = (
-  node: Node,
-  edges: Edge[],
-  nodeOutputs: Map<string, any>,
-): Record<string, any> => {
-  let inputValues: Record<string, any> = {};
-
-  // Find all incoming edges to this node
-  const incomingEdges = edges.filter((edge) => edge.target === node.id);
-
-  for (const edge of incomingEdges) {
-    // Get the source node's output value
-    const sourceNodeId = edge.source;
-    const sourceNodeOutputs = nodeOutputs.get(sourceNodeId);
-
-    if (sourceNodeOutputs) {
-      // With simplified handles, we can just use the direct output
-      inputValues = sourceNodeOutputs;
-    }
-  }
-
-  return inputValues;
-};
-
-/**
- * Execute the workflow
- */
-export const executeWorkflow = async (
-  nodes: Node[],
-  edges: Edge[],
-): Promise<Map<string, any>> => {
-  // Use LangGraph execution as the primary execution method
+export const executeWorkflow = async (nodes: Node[], edges: Edge[]) => {
   try {
-    return await executeLangGraphWorkflow(nodes, edges);
-  } catch (error) {
-    console.warn(
-      "LangGraph execution failed, falling back to legacy execution",
-      error,
+    // Convert workflow to backend format
+    const workflowConfig = convertToBackendFormat(nodes, edges);
+    console.log("Workflow config for backend:", workflowConfig);
+
+    // Initialize workflow connection
+    const workflowId = "test-1"; // In a real implementation, this would be dynamic
+    const socket = new WebSocket(
+      `ws://localhost:8000/ws/workflow/${workflowId}`,
     );
-    // Fall back to the original execution method
-    return executeWorkflowLegacy(nodes, edges);
+
+    return new Promise((resolve, reject) => {
+      // Set up socket event handlers
+      socket.onopen = () => {
+        console.log("WebSocket connection established");
+        // Send workflow configuration
+        socket.send(
+          JSON.stringify({
+            type: "run_workflow",
+            graph_config: workflowConfig,
+            inputs: {
+              messages: [{ type: "human", content: "Execute workflow" }],
+              system_prompt: "Workflow execution system",
+            },
+          }),
+        );
+      };
+
+      socket.onmessage = (event) => {
+        const response = JSON.parse(event.data);
+        console.log("Received workflow state update:", response);
+
+        // Update node states based on response
+        if (response.node_id) {
+          // Here we would update node state in the UI
+          console.log(
+            `Node ${response.node_id} executed with result:`,
+            response.result,
+          );
+        }
+
+        // Handle workflow completion
+        if (response.status === "completed") {
+          console.log("Workflow execution completed");
+          socket.close();
+          resolve(response);
+        } else if (response.status === "error") {
+          console.error("Workflow execution error:", response.error);
+          socket.close();
+          reject(new Error(response.error));
+        }
+      };
+
+      socket.onerror = (error) => {
+        console.error("WebSocket error:", error);
+        reject(new Error("WebSocket connection error"));
+      };
+
+      socket.onclose = () => {
+        console.log("WebSocket connection closed");
+      };
+    });
+  } catch (error) {
+    console.error("Error executing workflow:", error);
+    toast.error("Failed to execute workflow");
+    throw error;
   }
 };
 
 /**
- * Legacy workflow execution method
+ * Converts the React Flow nodes and edges to the backend workflow format
+ *
+ * @param nodes Array of workflow nodes
+ * @param edges Array of workflow edges
+ * @returns Backend-compatible workflow configuration
  */
-const executeWorkflowLegacy = async (
-  nodes: Node[],
-  edges: Edge[],
-): Promise<Map<string, any>> => {
-  const executionOrder = getExecutionOrder(nodes, edges);
-  const nodeOutputs = new Map<string, any>();
+const convertToBackendFormat = (nodes: Node[], edges: Edge[]) => {
+  // Find START and END nodes
+  const startNode = nodes.find((node) => node.data.label === "START");
+  const endNode = nodes.find((node) => node.data.label === "END");
 
-  toast({
-    title: "Workflow Execution",
-    description: "Starting workflow execution...",
-  });
-
-  console.log(
-    "Execution order:",
-    executionOrder.map((n) => n.id),
-  );
-
-  for (const node of executionOrder) {
-    try {
-      const nodeData = node.data as NodeData;
-      console.log(`Executing node ${node.id} (${nodeData.label})...`);
-
-      // Get inputs from connected nodes
-      const inputs = getNodeInputs(node, edges, nodeOutputs);
-      console.log(`Node ${node.id} inputs:`, inputs);
-
-      // Execute the node
-      if (nodeData.onRun) {
-        const outputs = await nodeData.onRun(node.id, inputs, nodeData.config);
-
-        // Store the outputs for use by downstream nodes
-        nodeOutputs.set(node.id, outputs);
-        console.log(`Node ${node.id} outputs:`, outputs);
-
-        // Record execution history (keeping only the latest)
-        nodeData.executionHistory = [
-          {
-            timestamp: new Date().toISOString(),
-            inputs,
-            outputs,
-          },
-        ];
-      }
-    } catch (error) {
-      console.error(`Error executing node ${node.id}:`, error);
-      toast({
-        title: "Execution Error",
-        description: `Error in node ${node.id}: ${(error as Error).message}`,
-        variant: "destructive",
-      });
-      break;
-    }
+  if (!startNode || !endNode) {
+    throw new Error("Workflow must contain both START and END nodes");
   }
 
-  toast({
-    title: "Workflow Completed",
-    description: "Workflow execution finished",
+  // Convert nodes to backend format
+  const backendNodes = nodes.map((node) => {
+    // Special handling for START and END nodes
+    if (node.data.label === "START") {
+      return { name: node.id, type: "START" };
+    }
+
+    if (node.data.label === "END") {
+      return { name: node.id, type: "END" };
+    }
+
+    // Regular nodes
+    const nodeConfig: Record<string, any> = {
+      name: node.id,
+      type: node.data.actionType || "PythonCode", // Default to PythonCode if not specified
+    };
+
+    // Add node configuration
+    if (node.data.config) {
+      // Add relevant config properties based on the node type
+      if (
+        node.data.actionType === "PythonCode" ||
+        node.data.actionType === "transform"
+      ) {
+        const config = node.data.config as Record<string, any>;
+        nodeConfig.code = config.function || config.code || "return {}";
+      } else if (node.data.actionType === "rest-get") {
+        const config = node.data.config as Record<string, any>;
+        nodeConfig.url = config.url || "";
+        nodeConfig.method = config.method || "GET";
+      }
+    }
+
+    return nodeConfig;
   });
 
-  return nodeOutputs;
+  // Convert edges to backend format - just source and target node IDs
+  const backendEdges = edges.map((edge) => [edge.source, edge.target]);
+
+  return {
+    nodes: backendNodes,
+    edges: backendEdges,
+  };
 };

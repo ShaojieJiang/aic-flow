@@ -22,7 +22,8 @@ export interface BaseNodeData extends Record<string, unknown> {
   label: string;
   description?: string;
   category?: NodeCategory;
-  icon?: string; // Add icon property
+  icon?: string;
+  emoji?: string; // Add emoji property
   inputs: Record<string, { type: string; [key: string]: any }>;
   outputs: Record<string, { type: string; [key: string]: any }>;
   config: Record<string, any>;
@@ -120,6 +121,8 @@ const BaseNode: React.FC<NodeProps> = ({ id, data, selected }) => {
         return "bg-purple-50 dark:bg-purple-900/20";
       case NodeCategory.CUSTOM:
         return "bg-gray-50 dark:bg-gray-900/20";
+      case NodeCategory.SPECIAL:
+        return "bg-slate-50 dark:bg-slate-900/20";
       default:
         return "";
     }
@@ -129,7 +132,7 @@ const BaseNode: React.FC<NodeProps> = ({ id, data, selected }) => {
   const getCategoryBadge = () => {
     if (!nodeData.category) return null;
 
-    const categoryColors: Record<NodeCategory, string> = {
+    const categoryColors: Record<string, string> = {
       [NodeCategory.SOURCE]:
         "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100",
       [NodeCategory.SINK]:
@@ -142,6 +145,8 @@ const BaseNode: React.FC<NodeProps> = ({ id, data, selected }) => {
         "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-100",
       [NodeCategory.CUSTOM]:
         "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-100",
+      [NodeCategory.SPECIAL]:
+        "bg-slate-100 text-slate-800 dark:bg-slate-900 dark:text-slate-100",
     };
 
     return (
@@ -154,6 +159,9 @@ const BaseNode: React.FC<NodeProps> = ({ id, data, selected }) => {
     );
   };
 
+  // Check if this is a START or END node for special styling
+  const isSpecialNode = nodeData.label === "START" || nodeData.label === "END";
+
   // Count input and output handles
   const inputCount = Object.keys(nodeData.inputs || {}).length;
   const outputCount = Object.keys(nodeData.outputs || {}).length;
@@ -163,31 +171,35 @@ const BaseNode: React.FC<NodeProps> = ({ id, data, selected }) => {
       <div
         className={`px-4 py-3 rounded-md border ${getCategoryColor()} min-w-[180px] ${
           selected ? "border-primary ring-1 ring-primary" : "border-border"
-        }`}
+        } ${isSpecialNode ? "font-bold" : ""}`}
         onDoubleClick={handleDoubleClick}
       >
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
-            {nodeData.icon && (
-              <div className="flex items-center justify-center">
-                {getIconComponent(nodeData.icon)}
+            {nodeData.emoji && (
+              <div className="flex items-center justify-center text-xl">
+                {nodeData.emoji}
               </div>
             )}
-            <div className="font-medium text-sm">{nodeData.label}</div>
+            <div
+              className={`${isSpecialNode ? "font-bold" : "font-medium"} text-sm`}
+            >
+              {nodeData.label}
+            </div>
           </div>
           <Button
             size="sm"
             variant="ghost"
             className="h-6 w-6 p-0"
             onClick={handleRun}
-            disabled={isRunning}
+            disabled={isRunning || isSpecialNode}
           >
             <Play className={`h-3 w-3 ${isRunning ? "animate-pulse" : ""}`} />
           </Button>
         </div>
 
         <div className="flex items-center justify-between">
-          {getCategoryBadge()}
+          {!isSpecialNode && getCategoryBadge()}
 
           <Button
             size="sm"
@@ -200,7 +212,7 @@ const BaseNode: React.FC<NodeProps> = ({ id, data, selected }) => {
         </div>
 
         {/* Input handles */}
-        {inputCount === 0 ? (
+        {inputCount === 0 && nodeData.label !== "START" ? (
           <Handle
             type="target"
             position={Position.Left}
@@ -221,7 +233,7 @@ const BaseNode: React.FC<NodeProps> = ({ id, data, selected }) => {
         )}
 
         {/* Output handles */}
-        {outputCount === 0 ? (
+        {outputCount === 0 && nodeData.label !== "END" ? (
           <Handle
             type="source"
             position={Position.Right}
@@ -247,7 +259,7 @@ const BaseNode: React.FC<NodeProps> = ({ id, data, selected }) => {
         <DialogContent className="max-w-[98vw] max-h-[90vh] overflow-x-auto overflow-y-hidden">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              {nodeData.icon && getIconComponent(nodeData.icon)}
+              {nodeData.emoji && <span>{nodeData.emoji}</span>}
               {nodeData.label}
             </DialogTitle>
           </DialogHeader>
@@ -364,7 +376,7 @@ const BaseNode: React.FC<NodeProps> = ({ id, data, selected }) => {
 
                   {/* Action node specific fields - Function */}
                   {"actionType" in nodeData &&
-                    (nodeData.actionType === "python" ||
+                    (nodeData.actionType === "PythonCode" ||
                       nodeData.actionType === "transform" ||
                       nodeData.actionType === "function") && (
                       <>

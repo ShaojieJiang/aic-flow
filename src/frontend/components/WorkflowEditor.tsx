@@ -31,6 +31,7 @@ import { toast } from "@/components/ui/use-toast";
 import { createNodeFromDefinition } from "@/utils/nodeFactory";
 import { ALL_NODE_TYPES } from "@/nodes/types";
 import { Button } from "@/components/ui/button";
+import { getWorkflowNameFromId } from "@/utils/workflowUtils";
 
 // Define a union type for all possible node data types
 export type NodeData = BaseNodeData | ActionNodeData;
@@ -58,15 +59,12 @@ const WorkflowEditorContent: React.FC = () => {
   const reactFlowInstance = useReactFlow();
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
 
-  // Extract workflow name from the URL parameter
+  // Extract workflow name from the URL parameter or fetch from workflow service
   useEffect(() => {
     if (workflowId) {
-      // Format the workflow name from the URL parameter
-      const formattedName = workflowId
-        .split("-")
-        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-        .join(" ");
-      setWorkflowName(formattedName);
+      // Use the utility function to get the workflow name
+      const name = getWorkflowNameFromId(workflowId);
+      setWorkflowName(name);
     }
   }, [workflowId]);
 
@@ -83,6 +81,20 @@ const WorkflowEditorContent: React.FC = () => {
   // Run workflow handler
   const handleRunAll = useCallback(async () => {
     if (isExecuting) return;
+
+    // Check if we have START and END nodes
+    const hasStartNode = nodes.some((node) => node.id === "START");
+    const hasEndNode = nodes.some((node) => node.id === "END");
+
+    if (!hasStartNode || !hasEndNode) {
+      toast({
+        title: "Missing Required Nodes",
+        description:
+          "Workflow must contain both START and END nodes. Please add them from the Special Nodes category.",
+        variant: "destructive",
+      });
+      return;
+    }
 
     setIsExecuting(true);
     try {
@@ -281,9 +293,15 @@ const WorkflowEditorContent: React.FC = () => {
     }
 
     // Create demo nodes
+    const startNode = createNodeFromDefinition(
+      ALL_NODE_TYPES.find((n) => n.label === "START")!,
+      { x: 100, y: 100 },
+      "START",
+    );
+
     const httpNode = createNodeFromDefinition(
       ALL_NODE_TYPES.find((n) => n.id === "rest-get")!,
-      { x: 100, y: 100 },
+      { x: 250, y: 100 },
       "http-1",
     );
 
@@ -295,50 +313,56 @@ const WorkflowEditorContent: React.FC = () => {
 
     const ifElseNode = createNodeFromDefinition(
       ALL_NODE_TYPES.find((n) => n.id === "if-else")!,
-      { x: 700, y: 100 },
+      { x: 550, y: 100 },
       "if-else-1",
     );
 
     const notificationNode = createNodeFromDefinition(
       ALL_NODE_TYPES.find((n) => n.id === "notification")!,
-      { x: 1000, y: 50 },
+      { x: 700, y: 50 },
       "notification-1",
     );
 
     const fileExportNode = createNodeFromDefinition(
       ALL_NODE_TYPES.find((n) => n.id === "file-export")!,
-      { x: 1000, y: 200 },
+      { x: 700, y: 200 },
       "file-export-1",
     );
 
+    const endNode = createNodeFromDefinition(
+      ALL_NODE_TYPES.find((n) => n.label === "END")!,
+      { x: 850, y: 100 },
+      "END",
+    );
+
     // Add config update handler to all nodes
-    httpNode.data = {
-      ...httpNode.data,
-      onConfigUpdate: handleConfigSave,
-    };
+    const nodeWithConfigHandler = (node: Node) => ({
+      ...node,
+      data: {
+        ...node.data,
+        onConfigUpdate: handleConfigSave,
+      },
+    });
 
-    transformNode.data = {
-      ...transformNode.data,
-      onConfigUpdate: handleConfigSave,
-    };
-
-    ifElseNode.data = {
-      ...ifElseNode.data,
-      onConfigUpdate: handleConfigSave,
-    };
-
-    notificationNode.data = {
-      ...notificationNode.data,
-      onConfigUpdate: handleConfigSave,
-    };
-
-    fileExportNode.data = {
-      ...fileExportNode.data,
-      onConfigUpdate: handleConfigSave,
-    };
+    const nodesWithHandlers = [
+      nodeWithConfigHandler(startNode),
+      nodeWithConfigHandler(httpNode),
+      nodeWithConfigHandler(transformNode),
+      nodeWithConfigHandler(ifElseNode),
+      nodeWithConfigHandler(notificationNode),
+      nodeWithConfigHandler(fileExportNode),
+      nodeWithConfigHandler(endNode),
+    ];
 
     // Create demo edges
     const demoEdges: Edge[] = [
+      {
+        id: "edge-start-http",
+        source: "start-node",
+        target: "http-1",
+        animated: true,
+        style: { stroke: "#7a8999" },
+      },
       {
         id: "edge-http-transform",
         source: "http-1",
@@ -371,15 +395,23 @@ const WorkflowEditorContent: React.FC = () => {
         label: "If false",
         style: { stroke: "#7a8999" },
       },
+      {
+        id: "edge-notification-end",
+        source: "notification-1",
+        target: "end-node",
+        animated: true,
+        style: { stroke: "#7a8999" },
+      },
+      {
+        id: "edge-export-end",
+        source: "file-export-1",
+        target: "end-node",
+        animated: true,
+        style: { stroke: "#7a8999" },
+      },
     ];
 
-    setNodes([
-      httpNode,
-      transformNode,
-      ifElseNode,
-      notificationNode,
-      fileExportNode,
-    ]);
+    setNodes(nodesWithHandlers);
     setEdges(demoEdges);
 
     // Fit view to the new workflow
@@ -576,7 +608,8 @@ const WorkflowEditorContent: React.FC = () => {
                     Welcome to AIC Flow
                   </h3>
                   <p className="text-muted-foreground mb-4">
-                    Get started by adding nodes from the library on the left.
+                    Get started by adding START and END nodes from the library
+                    on the left.
                   </p>
                   <Button onClick={createDemoWorkflow}>
                     Create Demo Workflow
