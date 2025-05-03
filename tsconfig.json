@@ -7,7 +7,7 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./aic_flow/frontend/*"]
+      "@/*": ["./src/frontend/*"]
     },
     "noImplicitAny": false,
     "noUnusedParameters": false,

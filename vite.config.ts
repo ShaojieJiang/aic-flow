@@ -16,7 +16,7 @@ export default defineConfig(({ mode }) => ({
   ].filter(Boolean),
   resolve: {
     alias: {
-      "@": path.resolve(__dirname, "./aic_flow/frontend"),
+      "@": path.resolve(__dirname, "./src/frontend"),
     },
   },
 }));

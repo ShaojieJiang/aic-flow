@@ -6,7 +6,7 @@ export default {
 		"./pages/**/*.{ts,tsx}",
 		"./components/**/*.{ts,tsx}",
 		"./app/**/*.{ts,tsx}",
-		"./aic_flow/frontend/**/*.{ts,tsx}",
+		"./src/frontend/**/*.{ts,tsx}",
 	],
 	prefix: "",
 	theme: {

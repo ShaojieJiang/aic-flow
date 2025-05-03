@@ -23,8 +23,8 @@
 
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./aic_flow/frontend/*"]
+      "@/*": ["./src/frontend/*"]
     }
   },
-  "include": ["aic_flow/frontend"]
+  "include": ["src/frontend"]
 }

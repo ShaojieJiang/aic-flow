@@ -126,7 +126,7 @@ const Gallery: React.FC = () => {
             <Link to="/gallery" className="flex items-center font-bold text-xl">
               AIC Flow
             </Link>
-            <span className="text-sm text-muted-foreground">v1.0.0</span>
+            <span className="text-sm text-muted-foreground">v0.0.1</span>
           </div>
           <div className="flex items-center">
             <ThemeToggle />
