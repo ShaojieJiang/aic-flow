@@ -17,6 +17,7 @@ import {
   INTEGRATION_NODE_TYPES,
   CUSTOM_NODE_TYPES,
   SPECIAL_NODE_TYPES,
+  AI_NODE_TYPES,
   NodeCategory,
 } from "@/nodes/types";
 import { createNodeFromDefinition } from "@/utils/nodeFactory";
@@ -65,6 +66,12 @@ const NodeLibrary: React.FC<NodeLibraryProps> = ({ onAddNode }) => {
       category: NodeCategory.PROCESSING,
       title: "Processing",
       nodes: PROCESSING_NODE_TYPES,
+      expanded: true,
+    },
+    {
+      category: NodeCategory.AI,
+      title: "AI & LLM",
+      nodes: AI_NODE_TYPES,
       expanded: true,
     },
     {

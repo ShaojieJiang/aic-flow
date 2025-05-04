@@ -5,6 +5,7 @@ export enum NodeCategory {
   CONTROL_FLOW = "Control Flow",
   INTEGRATION = "Integration",
   CUSTOM = "Custom",
+  AI = "AI",
   SPECIAL = "Special",
 }
 
@@ -129,16 +130,87 @@ export const PROCESSING_NODE_TYPES: NodeDefinition[] = [
     inputs: { input: { type: "any" } },
     outputs: { output: { type: "any" } },
   },
+];
+
+// AI Nodes
+export const AI_NODE_TYPES: NodeDefinition[] = [
   {
     id: "agent",
     label: "AI Agent",
     type: "actionNode",
     description: "AI-powered processing",
-    category: NodeCategory.PROCESSING,
+    category: NodeCategory.AI,
     icon: "Brain",
     emoji: "🧠",
-    inputs: { query: { type: "string" } },
-    outputs: { response: { type: "string" } },
+    inputs: {
+      query: { type: "string" },
+      context: { type: "object" },
+      memory: { type: "object" },
+      tools: { type: "array" },
+    },
+    outputs: {
+      response: { type: "string" },
+      thoughts: { type: "string" },
+      citations: { type: "array" },
+    },
+  },
+  {
+    id: "ai-model",
+    label: "LLM Model",
+    type: "actionNode",
+    description: "Large Language Model configuration",
+    category: NodeCategory.AI,
+    icon: "Bot",
+    emoji: "🤖",
+    inputs: {},
+    outputs: { model: { type: "object" } },
+  },
+  {
+    id: "ai-memory",
+    label: "Memory",
+    type: "actionNode",
+    description: "Memory for AI conversations",
+    category: NodeCategory.AI,
+    icon: "Database",
+    emoji: "💾",
+    inputs: { messages: { type: "array" } },
+    outputs: { memory: { type: "object" } },
+  },
+  {
+    id: "ai-tools",
+    label: "AI Tools",
+    type: "actionNode",
+    description: "Tool configuration for AI agents",
+    category: NodeCategory.AI,
+    icon: "Wrench",
+    emoji: "🔧",
+    inputs: { toolConfig: { type: "object" } },
+    outputs: { tools: { type: "array" } },
+  },
+  {
+    id: "ai-prompt",
+    label: "Prompt Template",
+    type: "actionNode",
+    description: "Create and format prompts for AI",
+    category: NodeCategory.AI,
+    icon: "MessageSquare",
+    emoji: "📝",
+    inputs: {
+      template: { type: "string" },
+      variables: { type: "object" },
+    },
+    outputs: { formattedPrompt: { type: "string" } },
+  },
+  {
+    id: "ai-embedding",
+    label: "Embedding",
+    type: "actionNode",
+    description: "Generate embeddings from text",
+    category: NodeCategory.AI,
+    icon: "Share2",
+    emoji: "🔢",
+    inputs: { text: { type: "string" } },
+    outputs: { embedding: { type: "array" } },
   },
 ];
 
@@ -254,7 +326,9 @@ export const ALL_NODE_TYPES: NodeDefinition[] = [
   ...SOURCE_NODE_TYPES,
   ...SINK_NODE_TYPES,
   ...PROCESSING_NODE_TYPES,
+  ...AI_NODE_TYPES,
   ...CONTROL_FLOW_NODE_TYPES,
   ...INTEGRATION_NODE_TYPES,
   ...CUSTOM_NODE_TYPES,
+  ...SPECIAL_NODE_TYPES,
 ];

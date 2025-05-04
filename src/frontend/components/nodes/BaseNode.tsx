@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from "react";
 import { Handle, Position, NodeProps } from "@xyflow/react";
 import * as Icons from "lucide-react";
-import { Play, Settings } from "lucide-react";
+import { Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { NodeCategory } from "@/nodes/types";
@@ -12,8 +12,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 
 // Define BaseNodeData with correct typing
@@ -49,8 +49,9 @@ const getIconComponent = (iconName: string): React.ReactNode => {
 
 const BaseNode: React.FC<NodeProps> = ({ id, data, selected }) => {
   const [isRunning, setIsRunning] = useState(false);
-  const [showDialog, setShowDialog] = useState(false);
   const [config, setConfig] = useState<Record<string, any>>({});
+  const [showDialog, setShowDialog] = useState(false);
+  const [isHovering, setIsHovering] = useState(false);
   const nodeData = data as BaseNodeData;
 
   // Initialize execution history if it doesn't exist
@@ -88,10 +89,6 @@ const BaseNode: React.FC<NodeProps> = ({ id, data, selected }) => {
     }
   }, [id, nodeData, isRunning]);
 
-  const handleDoubleClick = useCallback(() => {
-    setShowDialog(true);
-  }, []);
-
   const handleConfigSave = useCallback(() => {
     if (nodeData.onConfigUpdate) {
       nodeData.onConfigUpdate(id, config);
@@ -121,6 +118,8 @@ const BaseNode: React.FC<NodeProps> = ({ id, data, selected }) => {
         return "bg-purple-50 dark:bg-purple-900/20";
       case NodeCategory.CUSTOM:
         return "bg-gray-50 dark:bg-gray-900/20";
+      case NodeCategory.AI:
+        return "bg-pink-50 dark:bg-pink-900/20";
       case NodeCategory.SPECIAL:
         return "bg-slate-50 dark:bg-slate-900/20";
       default:
@@ -145,6 +144,8 @@ const BaseNode: React.FC<NodeProps> = ({ id, data, selected }) => {
         "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-100",
       [NodeCategory.CUSTOM]:
         "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-100",
+      [NodeCategory.AI]:
+        "bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-100",
       [NodeCategory.SPECIAL]:
         "bg-slate-100 text-slate-800 dark:bg-slate-900 dark:text-slate-100",
     };
@@ -171,48 +172,59 @@ const BaseNode: React.FC<NodeProps> = ({ id, data, selected }) => {
       <div
         className={`px-4 py-3 rounded-md border ${getCategoryColor()} min-w-[180px] ${
           selected ? "border-primary ring-1 ring-primary" : "border-border"
-        } ${isSpecialNode ? "font-bold" : ""}`}
-        onDoubleClick={handleDoubleClick}
+        } ${isSpecialNode ? "font-bold special-node" : "relative"}`}
+        onMouseEnter={() => setIsHovering(true)}
+        onMouseLeave={() => setIsHovering(false)}
+        onDoubleClick={() => setShowDialog(true)}
       >
-        <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center gap-2">
-            {nodeData.emoji && (
-              <div className="flex items-center justify-center text-xl">
-                {nodeData.emoji}
-              </div>
-            )}
-            <div
-              className={`${isSpecialNode ? "font-bold" : "font-medium"} text-sm`}
-            >
-              {nodeData.label}
-            </div>
-          </div>
+        {/* Run button that appears on hover */}
+        {!isSpecialNode && isHovering && (
           <Button
             size="sm"
             variant="ghost"
-            className="h-6 w-6 p-0"
+            className="h-6 w-6 p-0 absolute -top-7 right-0 bg-background border shadow-sm"
             onClick={handleRun}
-            disabled={isRunning || isSpecialNode}
+            disabled={isRunning}
           >
             <Play className={`h-3 w-3 ${isRunning ? "animate-pulse" : ""}`} />
           </Button>
-        </div>
+        )}
+
+        {isSpecialNode ? (
+          <div className="flex-1 flex flex-col items-center justify-center">
+            {nodeData.emoji && (
+              <div className="flex items-center justify-center text-xl mb-1">
+                {nodeData.emoji}
+              </div>
+            )}
+            <div className="font-bold text-sm">{nodeData.label}</div>
+          </div>
+        ) : (
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              {nodeData.emoji && (
+                <div className="flex items-center justify-center text-xl">
+                  {nodeData.emoji}
+                </div>
+              )}
+              <div className={"font-medium text-sm"}>{nodeData.label}</div>
+            </div>
+          </div>
+        )}
 
         <div className="flex items-center justify-between">
           {!isSpecialNode && getCategoryBadge()}
-
-          <Button
-            size="sm"
-            variant="ghost"
-            className="h-6 w-6 p-0 ml-auto"
-            onClick={handleDoubleClick}
-          >
-            <Settings className="h-3 w-3" />
-          </Button>
         </div>
 
         {/* Input handles */}
-        {inputCount === 0 && nodeData.label !== "START" ? (
+        {isSpecialNode && nodeData.label === "END" ? (
+          <Handle
+            type="target"
+            position={Position.Left}
+            className="w-2 h-2 rounded-full"
+            style={{ top: "50%", transform: "translateY(-50%)", left: -4 }}
+          />
+        ) : inputCount === 0 && nodeData.label !== "START" ? (
           <Handle
             type="target"
             position={Position.Left}
@@ -233,7 +245,14 @@ const BaseNode: React.FC<NodeProps> = ({ id, data, selected }) => {
         )}
 
         {/* Output handles */}
-        {outputCount === 0 && nodeData.label !== "END" ? (
+        {isSpecialNode && nodeData.label === "START" ? (
+          <Handle
+            type="source"
+            position={Position.Right}
+            className="w-2 h-2 rounded-full"
+            style={{ top: "50%", transform: "translateY(-50%)", right: -4 }}
+          />
+        ) : outputCount === 0 && nodeData.label !== "END" ? (
           <Handle
             type="source"
             position={Position.Right}

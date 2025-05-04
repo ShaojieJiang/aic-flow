@@ -1,0 +1,53 @@
+/* Split Pane Styles */
+.gutter {
+  background-color: #f5f5f5;
+  background-repeat: no-repeat;
+  background-position: 50%;
+}
+
+.gutter.gutter-horizontal {
+  background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAeCAYAAADkftS9AAAAIklEQVQoU2M4c+bMfxAGAgYYmwGrIIiDjrELjpo5aiZeMwF+yNnOs5KSvgAAAABJRU5ErkJggg==");
+  cursor: col-resize;
+}
+
+.gutter.gutter-vertical {
+  background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAFAQMAAABo7865AAAABlBMVEVHcEzMzMzyAv2sAAAAAXRSTlMAQObYZgAAABBJREFUeF5jOAMEEAIEEFwAn3kMwcB6I2AAAAAASUVORK5CYII=");
+  cursor: row-resize;
+}
+
+.split {
+  display: flex;
+  flex-direction: row;
+}
+
+.split.vertical {
+  flex-direction: column;
+}
+
+/* Monaco editor */
+.monaco-editor .margin,
+.monaco-editor-background {
+  background-color: transparent !important;
+}
+
+/* ReactJson styling */
+.react-json-view {
+  background-color: transparent !important;
+  font-size: 0.875rem !important;
+}
+
+.react-json-view .string-value {
+  color: #0d9488 !important;
+}
+
+.react-json-view .number-value {
+  color: #0369a1 !important;
+}
+
+.react-json-view .boolean-value {
+  color: #9333ea !important;
+}
+
+.react-json-view .null-value {
+  color: #64748b !important;
+}

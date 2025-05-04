@@ -22,7 +22,7 @@ import { useParams } from "react-router-dom";
 
 import BaseNode, { BaseNodeData } from "./nodes/BaseNode";
 import ActionNode, { ActionNodeData } from "./nodes/ActionNode";
-import NodeConfigForm from "./NodeConfigForm";
+import NodeInspector from "./NodeInspector";
 import NodeLibrary from "./NodeLibrary";
 import WorkflowToolbar from "./WorkflowToolbar";
 import { useUndoRedo } from "@/hooks/useUndoRedo";
@@ -32,6 +32,7 @@ import { createNodeFromDefinition } from "@/utils/nodeFactory";
 import { ALL_NODE_TYPES } from "@/nodes/types";
 import { Button } from "@/components/ui/button";
 import { getWorkflowNameFromId } from "@/utils/workflowUtils";
+import "../styles/split-pane.css";
 
 // Define a union type for all possible node data types
 export type NodeData = BaseNodeData | ActionNodeData;
@@ -49,7 +50,7 @@ const WorkflowEditorContent: React.FC = () => {
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [selectedNode, setSelectedNode] = useState<NodeData | null>(null);
-  const [configFormOpen, setConfigFormOpen] = useState(false);
+  const [inspectorOpen, setInspectorOpen] = useState(false);
   const [isExecuting, setIsExecuting] = useState(false);
   const [selectedElements, setSelectedElements] =
     useState<OnSelectionChangeParams>({
@@ -142,16 +143,19 @@ const WorkflowEditorContent: React.FC = () => {
           )
         ) {
           event.preventDefault();
-          setNodes((nds) =>
-            nds.filter(
+          setNodes((nds) => {
+            const updatedNodes = nds.filter(
               (node) => !selectedElements.nodes.find((n) => n.id === node.id),
-            ),
-          );
-          setEdges((eds) =>
-            eds.filter(
-              (edge) => !selectedElements.edges.find((e) => e.id === edge.id),
-            ),
-          );
+            );
+            setEdges((eds) =>
+              eds.filter(
+                (edge) =>
+                  updatedNodes.some((n) => n.id === edge.source) &&
+                  updatedNodes.some((n) => n.id === edge.target),
+              ),
+            );
+            return updatedNodes;
+          });
         }
       }
     };
@@ -210,10 +214,15 @@ const WorkflowEditorContent: React.FC = () => {
     console.log("Node clicked:", node);
   }, []);
 
-  // Node double click handler
+  // Node double click handler - Open node inspector
   const onNodeDoubleClick = useCallback(
     (event: React.MouseEvent, node: Node) => {
-      // We're using the handler inside the BaseNode component
+      // Don't open inspector for START and END nodes
+      if (node.data.label === "START" || node.data.label === "END") {
+        return;
+      }
+      setSelectedNode(node.data as NodeData);
+      setInspectorOpen(true);
     },
     [],
   );
@@ -621,10 +630,10 @@ const WorkflowEditorContent: React.FC = () => {
         </div>
       </div>
 
-      {/* We keep this for compatibility, but it's no longer used for configuration */}
-      <NodeConfigForm
-        isOpen={configFormOpen}
-        onClose={() => setConfigFormOpen(false)}
+      {/* Node Inspector */}
+      <NodeInspector
+        isOpen={inspectorOpen}
+        onClose={() => setInspectorOpen(false)}
         node={selectedNode}
         onSave={handleConfigSave}
       />

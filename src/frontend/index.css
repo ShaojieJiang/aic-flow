@@ -215,6 +215,24 @@
   border-left: 4px solid #64748b;
 }
 
+/* Special nodes (START/END) */
+.special-node {
+  min-width: 80px !important;
+  min-height: 64px;
+  padding: 0.5rem !important;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.special-node .font-medium {
+  font-size: 0.875rem;
+}
+
+.special-node .text-xl {
+  font-size: 1.25rem;
+}
+
 /* Snap to grid */
 .react-flow__viewport {
   transition: transform 0.15s ease;
