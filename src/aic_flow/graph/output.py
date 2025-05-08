@@ -6,7 +6,7 @@ from functools import partial
 from typing import Any, cast
 
 
-Outputs = list[Any] | Any
+Outputs = dict[str, Any] | Any
 
 
 def _add_outputs_wrapper(func: Callable) -> Callable[[Outputs, Outputs], Outputs]:
@@ -31,7 +31,7 @@ def _add_outputs_wrapper(func: Callable) -> Callable[[Outputs, Outputs], Outputs
 
 @_add_outputs_wrapper
 def add_outputs(left: Outputs, right: Outputs) -> Outputs:
-    """Merges two lists of outputs, appending new outputs to the existing list.
+    """Merges two dictionaries of outputs, appending new outputs to the existing dictionary.
 
     Args:
         left: The base list of outputs.
@@ -40,8 +40,8 @@ def add_outputs(left: Outputs, right: Outputs) -> Outputs:
     Returns:
         A new list with outputs from `right` appended to `left`.
     """
-    if not isinstance(left, list):
-        left = [left]
-    if not isinstance(right, list):
-        right = [right]
-    return left + right
+    if not isinstance(left, dict):
+        left = {"outputs": left}
+    if not isinstance(right, dict):
+        right = {"outputs": right}
+    return {**left, **right}

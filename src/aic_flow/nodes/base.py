@@ -12,7 +12,24 @@ class BaseNode(ABC):
 
     name: str
 
-    @abstractmethod
-    def __call__(self, state: State) -> dict[str, Any]:  # pragma: no cover
+    def decode_variables(self, state: State) -> None:
+        """Decode the variables in attributes of the node."""
+        for key, value in self.__dict__.items():
+            if isinstance(value, str) and "{{" in value:
+                # Extract path from {{path.to.value}} format
+                path = value.strip("{}").split(".")
+                result = state["outputs"]
+                for part in path:
+                    result = result[part]
+                self.__dict__[key] = result
+
+    async def __call__(self, state: State) -> dict[str, Any]:  # pragma: no cover
         """Execute the node."""
+        self.decode_variables(state)
+        result = await self.run(state)
+        return {"outputs": {self.name: result}}
+
+    @abstractmethod
+    async def run(self, state: State) -> dict[str, Any]:
+        """Run the node."""
         pass

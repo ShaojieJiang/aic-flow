@@ -9,4 +9,4 @@ from .output import add_outputs
 class State(TypedDict):
     """State for the graph."""
 
-    outputs: Annotated[list, add_outputs]
+    outputs: Annotated[dict, add_outputs]

@@ -31,7 +31,7 @@ class PythonCodeNode(BaseNode):
 
     code: str
 
-    def __call__(self, state: State) -> dict[str, Any]:
+    async def run(self, state: State) -> dict[str, Any]:
         """Execute the code and return results."""
         # Ensure the code contains a return statement
         if "return" not in self.code or "return None" in self.code:
@@ -47,4 +47,4 @@ def _execute():
 """
         exec(wrapper, {"state": state}, local_vars)
         result = local_vars["_execute"]()  # type: ignore[typeddict-item]
-        return {"outputs": result}
+        return result
